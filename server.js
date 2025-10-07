@@ -1,14 +1,19 @@
 const express = require('express');
 const app = express();
 const http = require('http').createServer(app);
-const io = require('socket.io')(http);
+const io = require('socket.io')(http, {
+  cors: { origin: "*" }
+});
 
 app.use(express.static('public'));
 
 let queue = [];
 
 io.on('connection', socket => {
+  console.log('A user connected:', socket.id);
+
   socket.on('ready', () => {
+    console.log(`User ready: ${socket.id}`);
     if (queue.length > 0) {
       const peer = queue.shift();
       socket.partner = peer;
@@ -18,6 +23,7 @@ io.on('connection', socket => {
       peer.emit('matched');
     } else {
       queue.push(socket);
+      console.log('User added to queue:', socket.id);
     }
   });
 
@@ -53,15 +59,15 @@ io.on('connection', socket => {
   });
 
   socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
     if (socket.partner) {
       socket.partner.emit('disconnectPeer');
       socket.partner.partner = null;
     }
-    if (queue.includes(socket)) {
-      queue = queue.filter(s => s !== socket);
-    }
+    queue = queue.filter(s => s !== socket);
   });
 });
-//http.listen(3000, () => console.log('Running on http://localhost:3000'));
+
+
 const PORT = process.env.PORT || 3000;
-http.listen(PORT, () => console.log(`Running on port ${PORT}`));
+http.listen(PORT, () => console.log(`✅ Server running at http://localhost:${PORT}`));
