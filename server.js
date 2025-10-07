@@ -68,4 +68,6 @@ io.on('connection', socket => {
   });
 });
 
-http.listen(3000, () => console.log('✅ Server running at http://localhost:3000'));
+// ✅ Use dynamic port when deployed, fallback to 3000 locally
+const PORT = process.env.PORT || 3000;
+http.listen(PORT, () => console.log(`✅ Server running at http://localhost:${PORT}`));
